@@ -1,0 +1,44 @@
+// EventList.scss
+@import 'variables';
+
+.event-list {
+  height: calc(100vh - 300px);
+  overflow: scroll;
+  padding: $padding;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+  &__item {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid $border-color;
+    padding: $padding/2;
+    &:last-child {
+      border-bottom: none; // 最後一個項目不需要底部邊框
+    }
+
+    &__time {
+      color: $secondary-color;
+      width: 100px;
+    }
+
+    &__task {
+      flex: 1; // 使任務描述占用所有可用空間
+      padding-left: 20px; // 在時間和任務描述之間添加一些間距
+      text-align: left; // 對齊到右邊
+      white-space: nowrap; // 阻止文本換行
+      overflow: hidden; // 隱藏超出部分的文本
+      text-overflow: ellipsis; // 超出部分顯示省略號
+      color: $primary-color;
+    }
+
+    &__delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-left: 10px; // 或根据您的设计调整
+    }
+  }
+}
