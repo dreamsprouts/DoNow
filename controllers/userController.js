@@ -31,7 +31,7 @@ exports.confirmUserIdentity = async (req, res) => {
 
 
 // 核心用戶處理邏輯
-async function processUser({ name, email, googleId, anonymousId }) {
+exports.processUser = async function({ name, email, googleId, anonymousId }) {
     // 確保匿名ID已提供且不為空
     if (!anonymousId || anonymousId.length === 0) {
       throw new Error('必須提供有效的 anonymousId。');
@@ -61,12 +61,12 @@ async function processUser({ name, email, googleId, anonymousId }) {
   
     await user.save();
     return user;
-  }
+  };
   
   // api 專用 createUser，使用 processUser 函數
   exports.createUser = async (req, res) => {
       try {
-        const user = await processUser(req.body);
+        const user = await exports.processUser(req.body);
         res.status(201).send(user);
       } catch (error) {
         res.status(500).send({ message: error.message });

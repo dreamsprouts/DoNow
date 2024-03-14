@@ -4,7 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const session = require('express-session');
-// const passport = require('./auth/passportSetup');
+const passport = require('./auth/passportSetup');
 
 
 const app = express();
@@ -31,7 +31,7 @@ app.listen(PORT, () => {
 const eventRoutes = require('./routes/events');
 const taskRoutes = require('./routes/tasks'); 
 const usersRoutes = require('./routes/users');
-// const authRoutes = require('./auth/authRoutes');
+const authRoutes = require('./auth/authRoutes');
 
 // 中間件
 app.use(express.json());
@@ -46,13 +46,13 @@ app.use(session({
   saveUninitialized: false,
   cookie: { secure: 'auto', httpOnly: true } // secure: true 在 HTTPS 環境下使用
 }));
-// app.use(passport.initialize());
+app.use(passport.initialize());
 
 // 使用路由中間件
 app.use('/api', eventRoutes);
 app.use('/api', taskRoutes); 
 app.use('/api', usersRoutes);
-// app.use(authRoutes);
+app.use(authRoutes);
 
 // 預設路由
 app.get('/', (req, res) => {

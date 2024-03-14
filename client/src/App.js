@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TrackBoard from './components/TrackBoard';
 import EventList from './components/EventList';
+import Header from './components/Header';
 import axios from 'axios';
 import './styles/main.scss';
 
@@ -73,9 +74,14 @@ const App = () => {
     }
   };
 
+  const handleLogin = () => {
+    window.location.href = `${API}/auth/google`;
+  };
+
   return (
     <div className="app-container">
       <div>
+        <Header onLogin={handleLogin} API={API} />
         <TrackBoard onAddEvent={addEvent} userIdConfirmed={userIdConfirmed} API={API}/>
         <EventList events={events} onDeleteEvent={deleteEvent}/>
       </div>
