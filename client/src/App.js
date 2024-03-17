@@ -29,23 +29,22 @@ const App = () => {
         // Step 2: 檢查登入狀態
         const loginStatusResponse = await axios.get(`${API}/api/auth/status`);
         setIsLoggedIn(loginStatusResponse.data.isLoggedIn);
-        console.log("Step 2: 檢查登入狀態");
-        console.log("isLoggedIn:"+isLoggedIn);
-
+        console.log("Step 2: 檢查登入狀態 - isLoggedIn="+loginStatusResponse.data.isLoggedIn);
         // Step 3: 加載 event 和 task 列表
         await Promise.all([
           fetchEvents(),
           fetchTasks(),// 假設你有一個 fetchTasks 方法在 TrackBoard 中
-          console.log("Step 3: 加載 event 和 task 列表")
+          console.log("Step 3: 加載 event 和 task 列表"),
         ]);
         
       } catch (error) {
         console.error("Initialization error:", error);
-        console.log("isLoggedIn:"+isLoggedIn);
       }
     };
     initialize();
   }, []); 
+  
+
   // apiTest();
   // const apiTest = async () => {
   //   try {
@@ -109,10 +108,16 @@ const App = () => {
     window.location.href = `${API}/auth/google`;
   };
 
-  const handleLogout = () => {
-    // 登出處理，可能是向後端發送登出請求，待補上
-    // 假定登出成功後，更新狀態
-    // setIsLoggedIn(false);
+  const handleLogout = async () => {
+    try {
+      await axios.get(`${API}/auth/logout`); // 向後端發送登出請求
+      setIsLoggedIn(false); // 更新狀態為未登入
+      setUserId(null); // 清除 userId
+      console.log("已登出，IsLoggedIn="+isLoggedIn);
+      // 這裡還可以加上導航到登入頁面的代碼，如果您有的話
+    } catch (error) {
+      console.error('登出錯誤:', error);
+    }
   };
 
   return (
@@ -121,6 +126,7 @@ const App = () => {
         onLogin={handleLogin}
         onLogout={handleLogout}
         API={API}
+        isLoggedIn={isLoggedIn}
       />
       <div className="body-content">
         <TrackBoard 
