@@ -11,3 +11,6 @@ body {
   margin: auto;
   padding: 20px;
 }
+.body-content {
+  margin-top: $header-height + 30px; // 根據你的 header 高度調整
+}

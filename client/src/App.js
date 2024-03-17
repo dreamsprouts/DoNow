@@ -9,38 +9,52 @@ const API = process.env.REACT_APP_API_URL || "http://localhost:5001";
 axios.defaults.withCredentials = true; //確保所有使用 axios 發出的請求都會自動攜帶 cookies
 const App = () => {
   const [events, setEvents] = useState([]);
-  const [userIdConfirmed, setUserIdConfirmed] = useState(false); // 新增狀態來追蹤用戶身份是否已確認
+  const [tasks, setTasks] = useState([]);
+  const [userId, setUserId] = useState(null);
+  // const [userIdConfirmed, setUserIdConfirmed] = useState(false); // 新增狀態來追蹤用戶身份是否已確認
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // 追蹤用戶登入狀態
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
-  // 新增一個 useEffect 來處理用戶身份確認
+  // 初始化
   useEffect(() => {
-    const confirmUserId = async () => {
-      // 嘗試從後端確認用戶身份，這可能涉及到檢查 cookie，創建新用戶等操作
+    const initialize = async () => {
       try {
-        // 假設您有一個後端端點可以執行這個確認過程
-        await axios.get(`${API}/api/users/confirm`);
-        setUserIdConfirmed(true); // 如果成功，設置 userIdConfirmed 為 true
+        // Step 1: 確認是否有 userId，如果沒有則從後端獲取
+        if (!userId) {
+          const userIdResponse = await axios.get(`${API}/api/users/confirm`);
+          setUserId(userIdResponse.data.userId); // 假設後端回傳 { userId: "someUserId" }
+          console.log("Step 1: 確認是否有 userId，如果沒有則從後端獲取");
+        }
+        
+        // Step 2: 檢查登入狀態
+        const loginStatusResponse = await axios.get(`${API}/api/auth/status`);
+        setIsLoggedIn(loginStatusResponse.data.isLoggedIn);
+        console.log("Step 2: 檢查登入狀態");
+        console.log("isLoggedIn:"+isLoggedIn);
+
+        // Step 3: 加載 event 和 task 列表
+        await Promise.all([
+          fetchEvents(),
+          fetchTasks(),// 假設你有一個 fetchTasks 方法在 TrackBoard 中
+          console.log("Step 3: 加載 event 和 task 列表")
+        ]);
+        
       } catch (error) {
-        console.error('Error confirming user ID:', error);
+        console.error("Initialization error:", error);
+        console.log("isLoggedIn:"+isLoggedIn);
       }
     };
-    apiTest();
-    confirmUserId();
-  }, []);
-
-  useEffect(() => {
-    if (userIdConfirmed) {
-      fetchEvents(); // 只有在用戶身份被確認後才調用 fetchEvents
-    }
-  }, [userIdConfirmed]); // 依賴於 userIdConfirmed
-
-  const apiTest = async () => {
-    try {
-      const response = await axios.get(`${API}/api/events/hi`);
-      console.log('API response:', response.data);
-    } catch (error) {
-      console.error('Error fetching from API:', error);
-    }
-  };
+    initialize();
+  }, []); 
+  // apiTest();
+  // const apiTest = async () => {
+  //   try {
+  //     const response = await axios.get(`${API}/api/events/hi`);
+  //     console.log('API response:', response.data);
+  //   } catch (error) {
+  //     console.error('Error fetching from API:', error);
+  //   }
+  // };
 
   const fetchEvents = async () => {
     try {
@@ -50,6 +64,22 @@ const App = () => {
       console.error('Error fetching events:', error);
     }
   };
+
+  // 只更新任務列表，不設定選定任務ID
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get(`${API}/api/tasks/sorted/user`);
+      if (response.data && response.data.length > 0) {
+        setTasks(response.data);
+        if (!selectedTaskId) {
+          setSelectedTaskId(response.data[0]._id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+  
 
   const addEvent = async (newEvent) => {
     try {
@@ -75,14 +105,32 @@ const App = () => {
   };
 
   const handleLogin = () => {
+    // 登入處理，打開 OAuth 登入頁面
     window.location.href = `${API}/auth/google`;
+  };
+
+  const handleLogout = () => {
+    // 登出處理，可能是向後端發送登出請求，待補上
+    // 假定登出成功後，更新狀態
+    // setIsLoggedIn(false);
   };
 
   return (
     <div className="app-container">
-      <div>
-        <Header onLogin={handleLogin} API={API} />
-        <TrackBoard onAddEvent={addEvent} userIdConfirmed={userIdConfirmed} API={API}/>
+      <Header
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        API={API}
+      />
+      <div className="body-content">
+        <TrackBoard 
+          onAddEvent={addEvent} 
+          API={API}
+          fetchTasks={fetchTasks}
+          tasks={tasks}
+          selectedTaskId={selectedTaskId}
+          setSelectedTaskId={setSelectedTaskId}
+        />
         <EventList events={events} onDeleteEvent={deleteEvent}/>
       </div>
     </div>

@@ -1,0 +1,42 @@
+// _header.scss
+
+.app-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 1rem;
+height: $header-height;
+background-color: rgba($primary-color,0.9);
+color: white;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+z-index: 1000; // 確保 header 在其他內容之上
+
+
+  
+  .logo {
+    // Logo 專屬樣式
+  }
+
+  button {
+    margin:$margin+30px;
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: $button-color; // 登入按鈕的背景色
+    color: white;
+    font-weight: bold;
+    border-radius: 2px;
+    cursor: pointer;
+    &:hover {
+      background-color: darken($button-color, 10%);
+    }
+    &.logout {
+      background-color: $button-hover-color; // 登出按鈕的背景色
+      &:hover {
+        background-color: darken($button-hover-color, 10%);
+      }
+    }
+  }
+}

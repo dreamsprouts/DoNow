@@ -32,7 +32,9 @@ exports.confirmUserIdentity = async (req, res) => {
 
 // 核心用戶處理邏輯
 exports.processUser = async function({ name, email, googleId, anonymousId }) {
-    // 確保匿名ID已提供且不為空
+  console.log("processUser");  
+  console.log(name+email+anonymousId+googleId);  
+  // 確保匿名ID已提供且不為空
     if (!anonymousId || anonymousId.length === 0) {
       throw new Error('必須提供有效的 anonymousId。');
     }
@@ -41,14 +43,57 @@ exports.processUser = async function({ name, email, googleId, anonymousId }) {
     let user;
     if (googleId) {
       user = await User.findOne({ googleId: googleId });
+      console.log("user:" + user);
       if (!user) {
-        // 使用 googleId 創建一個新的非匿名用戶
-        user = new User({ name, email, googleId, anonymousId, isAnonymous: false });
+        // 檢查是否存在相同的 anonymousId
+        user = await User.findOne({ anonymousId: { $in: anonymousId } });
+        if (!user) {
+          // 使用 googleId 創建一個新的非匿名用戶
+          user = new User({ name, email, googleId, anonymousId, isAnonymous: false });
+        } else {
+          // 使用 googleId 將現有匿名用戶更新成非匿名用戶，並將 isAnonymous 設置為 false
+          user.googleId = googleId;
+          user.isAnonymous = false;
+          user.email = email;
+          user.name = name;
+        }
       } else {
-        // 使用 googleId 更新現有用戶，並將 isAnonymous 設置為 false
-        user.isAnonymous = false;
-        user.email = email;
-        user.name = name;
+        // 檢查是否存在相同的 anonymousId
+        userAnunymous = await User.findOne({ anonymousId: { $in: anonymousId } });
+        console.log("檢查是否存在相同的 anonymousId");  
+        if (userAnunymous && user._id.equals(userAnunymous._id)) {
+          // 使用 googleId 更新現有用戶，並將 isAnonymous 設置為 false
+          user.isAnonymous = false;
+          user.email = email;
+          user.name = name;
+        } else if (userAnunymous) {
+          // 進行帳戶合併
+          // 將原本的 anonymousId 移除
+          await User.updateOne(
+            { _id: userAnunymous._id },
+            {
+              $pullAll: { anonymousId: userAnunymous.anonymousId },
+            }
+          );
+          console.log("將原本的 anonymousId 移除");  
+          // 將 userAnunymous 的 anonymousId 加入 user anonymousId 陣列中
+          await User.updateOne(
+            { _id: user._id },
+            {
+              $addToSet: { anonymousId: { $each: userAnunymous.anonymousId } },
+              $set: { isAnonymous: false, email: email, name: name }
+            }
+          ); 
+          console.log("將 userAnunymous 的 anonymousId 加入 user anonymousId 陣列中");  
+          // 若移除後陣列為空，則移除該 key
+          await User.updateOne(
+            { _id: userAnunymous._id, anonymousId: { $size: 0 } },
+            {
+              $unset: { anonymousId: "" }
+            }
+          );
+          console.log("若移除後陣列為空，則移除該 key");  
+        }
       }
     } else {
       // 檢查是否存在相同的 anonymousId

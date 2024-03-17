@@ -47,6 +47,7 @@ app.use(session({
   cookie: { secure: 'auto', httpOnly: true } // secure: true 在 HTTPS 環境下使用
 }));
 app.use(passport.initialize());
+app.use(passport.session());
 
 // 使用路由中間件
 app.use('/api', eventRoutes);
